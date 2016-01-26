@@ -31,14 +31,19 @@ with open('drifter.csv', 'rt') as csvfile:
                     trials_time[esn] = 0
                 if esn not in trials_count:
                     trials_count[esn] = 0
+
                 current_timestamp = time.mktime(time.strptime(record["Message Time US East Coast (EDT)"], '%m/%d/%y %H:%M'))
                 if abs(current_timestamp - trials_time[esn]) > 10800:
                     trials_count[esn] += 1
                 trials_time[esn] = current_timestamp
+
+                unit_name = ''
+                if "Unit Name" in record:
+                    unit_name = record["Unit Name"]
                 trials[esn].append([
                     trials_count[esn],
                     esn,
-                    record["Unit Name"],
+                    unit_name,
                     record["Latitude"],
                     record["Longitude"],
                     current_timestamp,
@@ -46,4 +51,10 @@ with open('drifter.csv', 'rt') as csvfile:
             except (KeyError, ValueError) as e:
                 print(e)
                 print(record)
-print(trials)
+
+with open("output.csv", "w") as output:
+    writer = csv.writer(output, lineterminator='\n')
+    writer.writerow(["Trial", "ESN", "Name", "Lat", "Lng", "Timestamp"])
+    for esn in trials:
+        for row in trials[esn]:
+            writer.writerow(row)
